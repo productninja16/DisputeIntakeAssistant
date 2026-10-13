@@ -21,7 +21,8 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 /** End to end with the default stub client: submit returns, the suggestion appears afterwards. */
-@SpringBootTest
+// Pinned to the stub so tests never hit the real API, even if a local .env enables it.
+@SpringBootTest(properties = "suggestion.client=stub")
 @Testcontainers
 class SuggestionAsyncTest {
 
