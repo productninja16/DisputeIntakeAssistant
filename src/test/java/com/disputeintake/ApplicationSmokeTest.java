@@ -39,7 +39,9 @@ class ApplicationSmokeTest {
 
     @Test
     void aiSuggestionsAreInsertOnly() {
-        jdbc.update("INSERT INTO disputes (id, customer_ref, description) VALUES (gen_random_uuid(), 'CUST-0001', 'Synthetic: I was charged twice at the same store.')");
+        jdbc.update("INSERT INTO customers (id, customer_ref, display_name) VALUES ('00000000-0000-0000-0000-000000000001', 'SMOKE-1', 'Smoke Test')");
+        jdbc.update("INSERT INTO transactions (id, customer_id, merchant_name, amount_cents, posted_on, card_last4) VALUES ('00000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000001', 'Smoke Store', 1000, current_date, '1234')");
+        jdbc.update("INSERT INTO disputes (id, customer_id, transaction_id, description) VALUES (gen_random_uuid(), '00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000002', 'Synthetic: I was charged twice at the same store.')");
         String disputeId = jdbc.queryForObject("SELECT id::text FROM disputes LIMIT 1", String.class);
         jdbc.update("""
                 INSERT INTO ai_suggestions (id, dispute_id, category, reasoning, proposed_queue, model, raw_json)
