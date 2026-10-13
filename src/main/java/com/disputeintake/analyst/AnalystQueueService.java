@@ -1,8 +1,15 @@
 package com.disputeintake.analyst;
 
+import com.disputeintake.customer.CardTransaction;
+import com.disputeintake.customer.CardTransactionRepository;
+import com.disputeintake.dispute.Dispute;
+import com.disputeintake.dispute.DisputeRepository;
 import com.disputeintake.suggestion.AiSuggestion;
 import com.disputeintake.suggestion.AiSuggestionRepository;
 import com.disputeintake.suggestion.ProposedQueue;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -19,10 +26,43 @@ public class AnalystQueueService {
 
     private final AnalystQueryRepository queries;
     private final AiSuggestionRepository suggestions;
+    private final DisputeRepository disputes;
+    private final CardTransactionRepository transactions;
+    private final DecisionRepository decisions;
+    private final ObjectMapper mapper;
 
-    public AnalystQueueService(AnalystQueryRepository queries, AiSuggestionRepository suggestions) {
+    public AnalystQueueService(AnalystQueryRepository queries, AiSuggestionRepository suggestions,
+            DisputeRepository disputes, CardTransactionRepository transactions, DecisionRepository decisions,
+            ObjectMapper mapper) {
         this.queries = queries;
         this.suggestions = suggestions;
+        this.disputes = disputes;
+        this.transactions = transactions;
+        this.decisions = decisions;
+        this.mapper = mapper;
+    }
+
+    @Transactional(readOnly = true)
+    public CaseView getCase(UUID disputeId) {
+        Dispute d = disputes.findById(disputeId).orElseThrow(DisputeNotFoundException::new);
+        CardTransaction t = transactions.findById(d.getTransactionId()).orElseThrow(DisputeNotFoundException::new);
+        SuggestionView suggestion = suggestions.findFirstByDisputeIdOrderByCreatedAtDesc(disputeId)
+                .map(this::toView).orElse(null);
+        Decision decision = decisions.findByDisputeId(disputeId).orElse(null);
+        return new CaseView(d.getId(), d.getDescription(), d.getStatus(), t.getMerchantName(), t.getAmountCents(),
+                t.getPostedOn(), t.getCardLast4(), d.getCreatedAt(), suggestion, decision);
+    }
+
+    private SuggestionView toView(AiSuggestion s) {
+        List<String> missing;
+        try {
+            missing = mapper.readValue(s.getMissingInfoJson(), new TypeReference<List<String>>() {
+            });
+        } catch (JsonProcessingException e) {
+            missing = List.of();
+        }
+        return new SuggestionView(s.getId(), s.getCategory(), s.getProposedQueue(), missing, s.getReasoning(),
+                s.getModel());
     }
 
     /**

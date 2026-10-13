@@ -5,6 +5,8 @@
 <header th:replace="~{fragments :: header}"></header>
 <main class="wide">
   <nav th:replace="~{fragments :: analystNav}"></nav>
+  <p class="notice" th:if="${message}" th:text="${message}">Message</p>
+  <p class="error" th:if="${error}" th:text="${error}">Error</p>
   <h1>Disputes awaiting review</h1>
   <form th:action="@{/analyst/queue}" method="get" class="stack">
     <label for="queueFilter">AI-proposed queue</label>

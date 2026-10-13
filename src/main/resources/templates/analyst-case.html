@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Case')}"></head>
+<body>
+<header th:replace="~{fragments :: header}"></header>
+<main class="wide">
+  <nav th:replace="~{fragments :: analystNav}"></nav>
+  <h1>Case <span th:text="${case.caseRef}">D-00000000</span></h1>
+  <p class="error" th:if="${error}" th:text="${error}">Error</p>
+
+  <h2>Customer report</h2>
+  <p>
+    <strong th:text="${case.merchantName}">Merchant</strong> ·
+    <span th:text="${case.amount}">$0.00</span> · charged
+    <span th:text="${case.postedOn}">2026-01-01</span> · card ending
+    <span th:text="${case.cardLast4}">0000</span> · reported
+    <span th:text="${#temporals.format(case.createdAt, 'yyyy-MM-dd HH:mm', 'UTC')}">2026-01-01</span>
+  </p>
+  <blockquote th:text="${case.description}">Customer text</blockquote>
+
+  <h2>AI suggestion <span class="badge muted">suggestion only, not a decision</span></h2>
+  <div th:if="${case.suggestion != null}">
+    <p>
+      Category: <strong th:text="${case.suggestion.category}">CATEGORY</strong> ·
+      Proposed queue: <strong th:text="${case.suggestion.proposedQueue}">QUEUE</strong>
+      <span class="badge muted" th:text="${case.suggestion.model}">model</span>
+    </p>
+    <p th:text="${case.suggestion.reasoning}">Reasoning</p>
+    <div th:if="${!#lists.isEmpty(case.suggestion.missingInfo)}">
+      <p>Missing information:</p>
+      <ul><li th:each="m : ${case.suggestion.missingInfo}" th:text="${m}">Item</li></ul>
+    </div>
+  </div>
+  <p th:if="${case.suggestion == null && case.pending}">
+    No suggestion is available (it may still be generating, so refresh, or it could not be produced).
+    You can still decide by choosing a category and queue below.
+  </p>
+  <p th:if="${case.suggestion == null && !case.pending}">No suggestion was available for this case.</p>
+
+  <div th:if="${case.decision != null}">
+    <h2>Decision</h2>
+    <p>
+      <span class="badge" th:classappend="${case.decision.decisionType.name() == 'OVERRIDDEN'} ? 'warn'"
+            th:text="${case.decision.decisionType.name() == 'OVERRIDDEN'} ? 'Overridden' : 'Approved'">Approved</span>
+      <strong th:text="${case.decision.finalCategory}">CATEGORY</strong> →
+      <strong th:text="${case.decision.finalQueue}">QUEUE</strong>
+      by <span th:text="${case.decision.decidedBy}">analyst.a</span> at
+      <span th:text="${#temporals.format(case.decision.decidedAt, 'yyyy-MM-dd HH:mm', 'UTC')}">2026-01-01</span>
+    </p>
+    <p th:if="${case.decision.note}">Note: <span th:text="${case.decision.note}">Note</span></p>
+  </div>
+
+  <div th:if="${case.pending}">
+    <h2>Your decision</h2>
+    <form th:if="${case.suggestion != null}" th:action="@{/analyst/disputes/{id}/approve(id=${case.id})}"
+          method="post" class="stack">
+      <input type="hidden" name="suggestionId" th:value="${case.suggestion.id}">
+      <button type="submit">Approve the AI suggestion</button>
+    </form>
+    <form th:action="@{/analyst/disputes/{id}/override(id=${case.id})}" method="post" class="stack">
+      <fieldset>
+        <legend th:text="${case.suggestion != null} ? 'Or override with your own decision' : 'Choose a category and queue'">Override</legend>
+        <label for="category">Category</label>
+        <select id="category" name="category">
+          <option th:each="c : ${categories}" th:value="${c}" th:text="${c}" th:selected="${c == formCategory}">C</option>
+        </select>
+        <label for="queueChoice">Queue</label>
+        <select id="queueChoice" name="queueChoice">
+          <option th:each="q : ${queues}" th:value="${q}" th:text="${q}" th:selected="${q == formQueue}">Q</option>
+        </select>
+        <label for="note">Note (required)</label>
+        <textarea id="note" name="note" rows="3" maxlength="1000" th:text="${formNote}"></textarea>
+      </fieldset>
+      <button type="submit">Record my decision</button>
+    </form>
+  </div>
+</main>
+</body>
+</html>
