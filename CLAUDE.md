@@ -47,5 +47,5 @@ Anthropic Java SDK for the LLM, simple server-rendered UI (Thymeleaf + minimal C
 - Default model: `claude-haiku-5-5`, configurable via `anthropic.model`.
 
 ## Decision log
-- Directory is `DisputeIntakeAssistant` (owner's spelling), separate from the earlier DisputeTracker project.
+- Project lives in `DisputeIntakeAssistant`, separate from the earlier DisputeTracker project.
 - Default model `claude-haiku-5-5`.
