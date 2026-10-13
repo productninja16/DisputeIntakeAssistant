@@ -1,6 +1,8 @@
 package com.disputeintake.suggestion;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.repository.Repository;
 
@@ -12,4 +14,10 @@ public interface AiSuggestionRepository extends Repository<AiSuggestion, UUID> {
     boolean existsByDisputeId(UUID disputeId);
 
     List<AiSuggestion> findByDisputeId(UUID disputeId);
+
+    Optional<AiSuggestion> findById(UUID id);
+
+    Optional<AiSuggestion> findFirstByDisputeIdOrderByCreatedAtDesc(UUID disputeId);
+
+    List<AiSuggestion> findByDisputeIdIn(Collection<UUID> disputeIds);
 }

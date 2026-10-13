@@ -64,6 +64,14 @@ public class Dispute {
         return status;
     }
 
+    /** Called only by the analyst decision flow. */
+    public void markDecided(DisputeStatus decided) {
+        if (status != DisputeStatus.PENDING_REVIEW || decided == DisputeStatus.PENDING_REVIEW) {
+            throw new IllegalStateException("Dispute is not awaiting a decision");
+        }
+        this.status = decided;
+    }
+
     public Instant getCreatedAt() {
         return createdAt;
     }

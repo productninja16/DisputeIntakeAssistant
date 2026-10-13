@@ -93,4 +93,8 @@ public class AiSuggestion {
     public String getRawJson() {
         return rawJson;
     }
+
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
 }
