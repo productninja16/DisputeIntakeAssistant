@@ -2,10 +2,12 @@ package com.disputeintake.dispute;
 
 import com.disputeintake.customer.CardTransaction;
 import com.disputeintake.customer.CardTransactionRepository;
+import com.disputeintake.suggestion.DisputeSubmitted;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,13 +18,17 @@ public class DisputeService {
     private final DisputeRepository disputes;
     private final CardTransactionRepository transactions;
 
-    public DisputeService(DisputeRepository disputes, CardTransactionRepository transactions) {
+    private final ApplicationEventPublisher events;
+
+    public DisputeService(DisputeRepository disputes, CardTransactionRepository transactions,
+            ApplicationEventPublisher events) {
         this.disputes = disputes;
         this.transactions = transactions;
+        this.events = events;
     }
 
     /**
-     * Records a new dispute as PENDING_REVIEW. Does nothing else: no AI call, no decision.
+     * Records a new dispute as PENDING_REVIEW. No decision is made; the AI suggestion is requested asynchronously after commit.
      * Card-number-like sequences are masked before the text is stored.
      */
     @Transactional
@@ -34,7 +40,10 @@ public class DisputeService {
         }
         Dispute dispute = new Dispute(customerId, transaction.getId(), CardNumberMasker.mask(description.strip()));
         try {
-            return disputes.saveAndFlush(dispute);
+            Dispute saved = disputes.saveAndFlush(dispute);
+            // Handled asynchronously after commit; the suggestion never blocks or alters intake.
+            events.publishEvent(new DisputeSubmitted(saved.getId()));
+            return saved;
         } catch (DataIntegrityViolationException e) {
             // Lost a race with a concurrent submit; the partial unique index is the final guard.
             throw new DuplicateOpenDisputeException();
