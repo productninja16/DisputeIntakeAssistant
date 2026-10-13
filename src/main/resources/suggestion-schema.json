@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["category", "missing_info", "reasoning", "proposed_queue"],
+  "properties": {
+    "category": {
+      "enum": ["UNAUTHORIZED_TRANSACTION", "DUPLICATE_CHARGE", "MERCHANDISE_NOT_RECEIVED",
+               "INCORRECT_AMOUNT", "SUBSCRIPTION_CANCELLED", "OTHER"]
+    },
+    "missing_info": {
+      "type": "array",
+      "maxItems": 10,
+      "items": {"type": "string", "minLength": 1, "maxLength": 200}
+    },
+    "reasoning": {"type": "string", "minLength": 1, "maxLength": 1000},
+    "proposed_queue": {
+      "enum": ["FRAUD", "BILLING_ERRORS", "MERCHANT_DISPUTES", "GENERAL_REVIEW"]
+    }
+  }
+}
