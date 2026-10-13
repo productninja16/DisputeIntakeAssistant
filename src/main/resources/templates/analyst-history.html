@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Decision history')}"></head>
+<body>
+<header th:replace="~{fragments :: header}"></header>
+<main class="wide">
+  <nav th:replace="~{fragments :: analystNav}"></nav>
+  <h1>Decision history</h1>
+  <p th:if="${#lists.isEmpty(rows)}">No decisions yet.</p>
+  <table th:unless="${#lists.isEmpty(rows)}">
+    <thead><tr><th>Case</th><th>Merchant</th><th>Amount</th><th>Final category</th><th>Final queue</th><th>Decision</th><th>By</th><th>When</th></tr></thead>
+    <tbody>
+      <tr th:each="r : ${rows}">
+        <td><a th:href="@{/analyst/disputes/{id}(id=${r.id})}" th:text="${r.caseRef}">D-00000000</a></td>
+        <td th:text="${r.merchantName}">Merchant</td>
+        <td th:text="${r.amount}">$0.00</td>
+        <td th:text="${r.finalCategory}">CATEGORY</td>
+        <td th:text="${r.finalQueue}">QUEUE</td>
+        <td><span class="badge" th:classappend="${r.overridden} ? 'warn'" th:text="${r.overridden} ? 'Overridden' : 'Approved'">Approved</span></td>
+        <td th:text="${r.decidedBy}">analyst.a</td>
+        <td th:text="${#temporals.format(r.decidedAt, 'yyyy-MM-dd HH:mm', 'UTC')}">2026-01-01</td>
+      </tr>
+    </tbody>
+  </table>
+</main>
+</body>
+</html>

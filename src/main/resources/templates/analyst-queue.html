@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Analyst queue')}"></head>
+<body>
+<header th:replace="~{fragments :: header}"></header>
+<main class="wide">
+  <nav th:replace="~{fragments :: analystNav}"></nav>
+  <h1>Disputes awaiting review</h1>
+  <form th:action="@{/analyst/queue}" method="get" class="stack">
+    <label for="queueFilter">AI-proposed queue</label>
+    <select id="queueFilter" name="queueFilter" onchange="this.form.submit()">
+      <option value="" th:selected="${filter == ''}">All</option>
+      <option th:each="q : ${queues}" th:value="${q}" th:text="${q}" th:selected="${filter == q.name()}">FRAUD</option>
+      <option th:value="${noSuggestion}" th:selected="${filter == noSuggestion}">No suggestion</option>
+    </select>
+    <noscript><button type="submit">Filter</button></noscript>
+  </form>
+  <p th:if="${#lists.isEmpty(rows)}">Nothing is waiting for review.</p>
+  <table th:unless="${#lists.isEmpty(rows)}">
+    <thead><tr><th>Case</th><th>Merchant</th><th>Amount</th><th>Reported</th><th>AI suggestion</th></tr></thead>
+    <tbody>
+      <tr th:each="r : ${rows}">
+        <td><a th:href="@{/analyst/disputes/{id}(id=${r.dispute.id})}" th:text="${r.dispute.caseRef}">D-00000000</a></td>
+        <td th:text="${r.dispute.merchantName}">Merchant</td>
+        <td th:text="${r.dispute.amount}">$0.00</td>
+        <td th:text="${#temporals.format(r.dispute.createdAt, 'yyyy-MM-dd HH:mm', 'UTC')}">2026-01-01</td>
+        <td>
+          <span th:if="${r.hasSuggestion}" th:text="${r.suggestedCategory} + ' → ' + ${r.suggestedQueue}">CATEGORY → QUEUE</span>
+          <span th:unless="${r.hasSuggestion}" class="badge muted">none</span>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</main>
+</body>
+</html>

@@ -17,3 +17,8 @@ fieldset { border: 1px solid var(--line); border-radius: 6px; padding: .75rem; b
 .choice.disabled { color: var(--muted); }
 table { width: 100%; border-collapse: collapse; background: #fff; }
 th, td { text-align: left; padding: .5rem .6rem; border-bottom: 1px solid var(--line); }
+.subnav { display: flex; gap: 1rem; margin-bottom: 1rem; }
+.badge { font-size: .75rem; border-radius: 999px; padding: .05rem .55rem; border: 1px solid var(--line); background: #fff; }
+.badge.warn { background: #fff8e1; border-color: #f0d98a; }
+.badge.muted { color: var(--muted); }
+main.wide { max-width: 1000px; }

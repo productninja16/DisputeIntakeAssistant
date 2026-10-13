@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Analyst sign-in')}"></head>
+<body>
+<header th:replace="~{fragments :: header}"></header>
+<main>
+  <h1>Analyst sign-in</h1>
+  <p class="notice">Demo shortcut: pick a demo analyst. This is not real authentication. Your name is
+    recorded on every decision you make.</p>
+  <form th:action="@{/analyst/sign-in}" method="post" class="stack">
+    <label for="analyst">Analyst</label>
+    <select id="analyst" name="analyst" required>
+      <option th:each="a : ${analysts}" th:value="${a}" th:text="${a}">analyst.a</option>
+    </select>
+    <button type="submit">Continue</button>
+  </form>
+</main>
+</body>
+</html>
