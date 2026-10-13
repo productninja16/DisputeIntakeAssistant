@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Sign in')}"></head>
+<body>
+<header th:replace="~{fragments :: header}"></header>
+<main>
+  <h1>Sign in as a demo customer</h1>
+  <p class="notice">Demo shortcut: pick a synthetic customer. A real bank would identify the customer
+    from their authenticated session.</p>
+  <form th:action="@{/sign-in}" method="post" class="stack">
+    <label for="customerId">Customer</label>
+    <select id="customerId" name="customerId" required>
+      <option th:each="c : ${customers}" th:value="${c.id}"
+              th:text="${c.customerRef} + ' · ' + ${c.displayName}">CUST-1001 · Name</option>
+    </select>
+    <button type="submit">Continue</button>
+  </form>
+</main>
+</body>
+</html>

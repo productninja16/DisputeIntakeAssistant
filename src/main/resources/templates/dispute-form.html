@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Report a problem')}"></head>
+<body>
+<header th:replace="~{fragments :: header}"></header>
+<main>
+  <h1>Report a problem with a charge</h1>
+  <p class="notice">Please do not enter card numbers or other personal details. Any card-like numbers
+    are removed automatically.</p>
+  <form th:action="@{/disputes}" th:object="${disputeForm}" method="post" class="stack">
+    <fieldset>
+      <legend>Which transaction?</legend>
+      <p class="error" th:if="${#fields.hasErrors('transactionId')}" th:errors="*{transactionId}">Error</p>
+      <label th:each="o : ${options}" class="choice" th:classappend="${o.disputeOpen} ? 'disabled'">
+        <input type="radio" name="transactionId" th:value="${o.id}" th:disabled="${o.disputeOpen}"
+               th:checked="${disputeForm.transactionId == o.id}">
+        <span th:text="${o.postedOn} + ' · ' + ${o.merchantName} + ' · ' + ${o.amount} + ' · card ending ' + ${o.cardLast4}">tx</span>
+        <em th:if="${o.disputeOpen}">(problem already reported)</em>
+      </label>
+    </fieldset>
+    <label for="description">What went wrong?</label>
+    <p class="error" th:if="${#fields.hasErrors('description')}" th:errors="*{description}">Error</p>
+    <textarea id="description" name="description" rows="6" maxlength="4000" th:text="${disputeForm.description}"
+              placeholder="Tell us in your own words what happened."></textarea>
+    <button type="submit">Submit</button>
+  </form>
+</main>
+</body>
+</html>

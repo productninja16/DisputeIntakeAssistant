@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Received')}"></head>
+<body>
+<header th:replace="~{fragments :: header}"></header>
+<main>
+  <h1>We have received your report</h1>
+  <p>Your case reference is <strong th:text="${caseRef}">D-00000000</strong>.</p>
+  <p>An analyst will review it and may contact you if more information is needed.</p>
+  <p><a class="button" th:href="@{/disputes}">Back to my disputes</a></p>
+</main>
+</body>
+</html>
