@@ -22,7 +22,7 @@ management:
       exposure:
         include: health
 
-# The key is read from the environment (see .env.example); never commit it.
+# The key is read from the environment (from .env or the shell); never commit it.
 anthropic:
   api-key: ${ANTHROPIC_API_KEY:}
   model: ${ANTHROPIC_MODEL:claude-haiku-5-5}
