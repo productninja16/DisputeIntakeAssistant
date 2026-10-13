@@ -1,6 +1,10 @@
 spring:
   application:
     name: dispute-intake-assistant
+  # Local secrets (ANTHROPIC_API_KEY, SUGGESTION_CLIENT, ...) come from the git-ignored .env in the
+  # working directory. Optional, so a missing file is fine; real environment variables still win.
+  config:
+    import: optional:file:.env[.properties]
   datasource:
     url: ${DB_URL:jdbc:postgresql://localhost:5433/dispute_intake}
     username: ${DB_USER:dispute_intake}
