@@ -8,7 +8,7 @@
   <p><a class="button" th:href="@{/disputes/new}">Report a problem with a charge</a></p>
   <p th:if="${#lists.isEmpty(disputes)}">You have not reported any problems yet.</p>
   <table th:unless="${#lists.isEmpty(disputes)}">
-    <thead><tr><th>Case</th><th>Merchant</th><th>Amount</th><th>Charged on</th><th>Reported</th></tr></thead>
+    <thead><tr><th>Case</th><th>Merchant</th><th>Amount</th><th>Charged on</th><th>Reported</th><th>Status</th></tr></thead>
     <tbody>
       <tr th:each="d : ${disputes}">
         <td th:text="${d.caseRef}">D-00000000</td>
@@ -16,6 +16,7 @@
         <td th:text="${d.amount}">$0.00</td>
         <td th:text="${d.postedOn}">2026-01-01</td>
         <td th:text="${#temporals.format(d.createdAt, 'yyyy-MM-dd HH:mm', 'UTC')}">2026-01-01</td>
+        <td th:text="${d.statusLabel}">In review</td>
       </tr>
     </tbody>
   </table>

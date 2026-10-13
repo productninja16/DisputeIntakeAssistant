@@ -22,7 +22,7 @@ public interface DisputeRepository extends JpaRepository<Dispute, UUID> {
     List<UUID> findOpenTransactionIds(UUID customerId);
 
     @Query("""
-            select new com.disputeintake.dispute.DisputeSummary(d.id, t.merchantName, t.amountCents, t.postedOn, d.createdAt)
+            select new com.disputeintake.dispute.DisputeSummary(d.id, t.merchantName, t.amountCents, t.postedOn, d.createdAt, d.status)
             from Dispute d, CardTransaction t
             where t.id = d.transactionId and d.customerId = :customerId
             order by d.createdAt desc
