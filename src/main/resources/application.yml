@@ -22,3 +22,7 @@ management:
 anthropic:
   api-key: ${ANTHROPIC_API_KEY:}
   model: ${ANTHROPIC_MODEL:claude-haiku-5-5}
+
+# stub (default, no network) or anthropic (real model; needs ANTHROPIC_API_KEY)
+suggestion:
+  client: ${SUGGESTION_CLIENT:stub}
