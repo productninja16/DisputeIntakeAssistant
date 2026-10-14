@@ -9,19 +9,29 @@
     are removed automatically.</p>
   <form th:action="@{/disputes}" th:object="${disputeForm}" method="post" class="stack">
     <fieldset>
-      <legend>Which transaction?</legend>
+      <legend>1. Which transaction?</legend>
       <p class="error" th:if="${#fields.hasErrors('transactionId')}" th:errors="*{transactionId}">Error</p>
       <label th:each="o : ${options}" class="choice" th:classappend="${o.disputeOpen} ? 'disabled'">
         <input type="radio" name="transactionId" th:value="${o.id}" th:disabled="${o.disputeOpen}"
-               th:checked="${disputeForm.transactionId == o.id}">
-        <span th:text="${o.postedOn} + ' · ' + ${o.merchantName} + ' · ' + ${o.amount} + ' · card ending ' + ${o.cardLast4}">tx</span>
-        <em th:if="${o.disputeOpen}">(problem already reported)</em>
+               th:required="${!o.disputeOpen}" th:checked="${disputeForm.transactionId == o.id}">
+        <span class="choice-main">
+          <strong th:text="${o.merchantName}">Merchant</strong>
+          <span th:text="${o.amount}">$0.00</span>
+        </span>
+        <span class="choice-sub">
+          <span th:text="${o.postedOn} + ' · card ending ' + ${o.cardLast4}">2026-01-01 · card ending 0000</span>
+          <em th:if="${o.disputeOpen}">Problem already reported</em>
+        </span>
       </label>
     </fieldset>
-    <label for="description">What went wrong?</label>
-    <p class="error" th:if="${#fields.hasErrors('description')}" th:errors="*{description}">Error</p>
-    <textarea id="description" name="description" rows="6" maxlength="4000" th:text="${disputeForm.description}"
-              placeholder="Tell us in your own words what happened."></textarea>
+    <fieldset>
+      <legend>2. What went wrong?</legend>
+      <p class="error" th:if="${#fields.hasErrors('description')}" th:errors="*{description}">Error</p>
+      <label for="description" class="muted-text">Tell us in your own words what happened (10 to 4000 characters).</label>
+      <textarea id="description" name="description" rows="6" required minlength="10" maxlength="4000"
+                th:text="${disputeForm.description}"
+                placeholder="For example: I was charged twice for the same order."></textarea>
+    </fieldset>
     <button type="submit">Submit</button>
   </form>
 </main>
