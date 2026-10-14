@@ -5,3 +5,8 @@ target/
 .DS_Store
 .env
 *.log
+
+# Eval runs: keep only the committed baseline
+eval/results/*
+!eval/results/.gitkeep
+!eval/results/baseline-stub.md
