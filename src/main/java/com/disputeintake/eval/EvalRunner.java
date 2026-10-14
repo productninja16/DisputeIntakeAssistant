@@ -56,8 +56,14 @@ public final class EvalRunner {
         for (EvalCase c : cases) {
             var outcome = engine.run(new SuggestionContext(
                     c.description(), c.merchantName(), c.amountCents(), c.postedOn()));
-            outcomes.add(new CaseOutcome(c, outcome.result(), outcome.attempts()));
+            outcomes.add(new CaseOutcome(c, outcome.result(), outcome.attempts(), outcome.apiFailure()));
             System.out.printf("%s %s%n", c.id(), outcome.succeeded() ? outcome.result().category() : "NO_SUGGESTION");
+            var abort = EvalAbortGuard.check(outcomes);
+            if (abort.isPresent()) {
+                System.err.println();
+                System.err.println(abort.get());
+                System.exit(1);
+            }
         }
 
         Instant now = Instant.now();
