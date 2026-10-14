@@ -48,7 +48,8 @@ public class SuggestionValidator {
                 Category.valueOf(node.get("category").asText()),
                 List.copyOf(missing),
                 node.get("reasoning").asText(),
-                ProposedQueue.valueOf(node.get("proposed_queue").asText())));
+                ProposedQueue.valueOf(node.get("proposed_queue").asText()),
+                Confidence.valueOf(node.get("confidence").asText())));
     }
 
     /** Models sometimes wrap JSON in a markdown fence; tolerate that and nothing else. */

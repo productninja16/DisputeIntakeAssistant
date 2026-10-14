@@ -3,6 +3,7 @@ package com.disputeintake.eval;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.disputeintake.suggestion.Category;
+import com.disputeintake.suggestion.Confidence;
 import com.disputeintake.suggestion.ProposedQueue;
 import com.disputeintake.suggestion.SuggestionResult;
 import java.time.LocalDate;
@@ -27,7 +28,7 @@ class EvalAbortGuardTest {
 
     private static CaseOutcome ok(String id) {
         return new CaseOutcome(c(id), new SuggestionResult(Category.OTHER, List.of(), "r",
-                ProposedQueue.GENERAL_REVIEW), 1, null);
+                ProposedQueue.GENERAL_REVIEW, Confidence.LOW), 1, null);
     }
 
     @Test

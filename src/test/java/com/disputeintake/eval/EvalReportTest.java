@@ -3,6 +3,7 @@ package com.disputeintake.eval;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.disputeintake.suggestion.Category;
+import com.disputeintake.suggestion.Confidence;
 import com.disputeintake.suggestion.ProposedQueue;
 import com.disputeintake.suggestion.SuggestionResult;
 import java.time.Instant;
@@ -17,7 +18,7 @@ class EvalReportTest {
     }
 
     private static SuggestionResult got(Category c, ProposedQueue q) {
-        return new SuggestionResult(c, List.of("x"), "because", q);
+        return new SuggestionResult(c, List.of("x"), "because", q, Confidence.MEDIUM);
     }
 
     private final List<CaseOutcome> outcomes = List.of(

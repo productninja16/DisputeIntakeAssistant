@@ -27,7 +27,7 @@ class SuggestionServiceTest {
 
     static final String VALID = """
             {"category":"DUPLICATE_CHARGE","missing_info":["Receipt"],
-             "reasoning":"Charged twice.","proposed_queue":"BILLING_ERRORS"}""";
+             "reasoning":"Charged twice.","proposed_queue":"BILLING_ERRORS","confidence":"HIGH"}""";
     static final String INVALID = "{\"category\":\"NOPE\"}";
 
     /** Replays scripted answers; a null entry makes the call throw. */
@@ -114,6 +114,8 @@ class SuggestionServiceTest {
         assertThat(suggestionCount(d)).isEqualTo(1);
         assertThat(jdbc.queryForObject("SELECT model FROM ai_suggestions WHERE dispute_id = ?", String.class, d))
                 .isEqualTo("scripted");
+        assertThat(jdbc.queryForObject("SELECT confidence FROM ai_suggestions WHERE dispute_id = ?", String.class, d))
+                .isEqualTo("HIGH");
         assertThat(jdbc.queryForObject("SELECT status FROM disputes WHERE id = ?", String.class, d))
                 .isEqualTo("PENDING_REVIEW");
         assertThat(jdbc.queryForObject("SELECT count(*) FROM decisions WHERE dispute_id = ?", Integer.class, d))

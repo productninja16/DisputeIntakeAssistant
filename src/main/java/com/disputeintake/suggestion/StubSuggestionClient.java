@@ -25,6 +25,7 @@ public class StubSuggestionClient implements SuggestionClient {
         String text = context.description().toLowerCase(Locale.ROOT);
         Category category;
         ProposedQueue queue;
+        Confidence confidence = Confidence.MEDIUM; // keyword match
         List<String> missing = List.of();
         String reasoning;
         if (containsAny(text, "twice", "duplicate", "double", "two times")) {
@@ -56,12 +57,14 @@ public class StubSuggestionClient implements SuggestionClient {
             queue = ProposedQueue.GENERAL_REVIEW;
             missing = List.of("More detail about what went wrong");
             reasoning = "The description does not clearly match a known category.";
+            confidence = Confidence.LOW;
         }
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("category", category.name());
         out.put("missing_info", missing);
         out.put("reasoning", reasoning + " (stub rules, not a model)");
         out.put("proposed_queue", queue.name());
+        out.put("confidence", confidence.name());
         try {
             return mapper.writeValueAsString(out);
         } catch (JsonProcessingException e) {

@@ -11,7 +11,7 @@ class SuggestionValidatorTest {
 
     private static final String VALID = """
             {"category":"DUPLICATE_CHARGE","missing_info":["Receipt"],
-             "reasoning":"Charged twice.","proposed_queue":"BILLING_ERRORS"}""";
+             "reasoning":"Charged twice.","proposed_queue":"BILLING_ERRORS","confidence":"HIGH"}""";
 
     @Test
     void acceptsValidJson() {
@@ -20,6 +20,14 @@ class SuggestionValidatorTest {
         assertThat(o.result().category()).isEqualTo(Category.DUPLICATE_CHARGE);
         assertThat(o.result().missingInfo()).containsExactly("Receipt");
         assertThat(o.result().proposedQueue()).isEqualTo(ProposedQueue.BILLING_ERRORS);
+        assertThat(o.result().confidence()).isEqualTo(Confidence.HIGH);
+    }
+
+    @Test
+    void rejectsMissingOrUnknownConfidence() {
+        assertThat(validator.validate(VALID.replace(",\"confidence\":\"HIGH\"", "")).isValid()).isFalse();
+        assertThat(validator.validate(VALID.replace("HIGH", "CERTAIN")).isValid()).isFalse();
+        assertThat(validator.validate(VALID.replace("\"HIGH\"", "0.9")).isValid()).isFalse();
     }
 
     @Test
@@ -35,7 +43,7 @@ class SuggestionValidatorTest {
     @Test
     void rejectsMissingField() {
         String noReasoning = """
-                {"category":"OTHER","missing_info":[],"proposed_queue":"GENERAL_REVIEW"}""";
+                {"category":"OTHER","missing_info":[],"proposed_queue":"GENERAL_REVIEW","confidence":"LOW"}""";
         ValidationOutcome o = validator.validate(noReasoning);
         assertThat(o.isValid()).isFalse();
         assertThat(o.errors()).isNotEmpty();

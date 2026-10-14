@@ -37,6 +37,11 @@ public class AiSuggestion {
     @Column(name = "proposed_queue", nullable = false, updatable = false)
     private ProposedQueue proposedQueue;
 
+    /** Null for rows written before confidence existed. */
+    @Enumerated(EnumType.STRING)
+    @Column(updatable = false)
+    private Confidence confidence;
+
     @Column(nullable = false, updatable = false)
     private String model;
 
@@ -58,6 +63,7 @@ public class AiSuggestion {
         this.missingInfoJson = missingInfoJson;
         this.reasoning = result.reasoning();
         this.proposedQueue = result.proposedQueue();
+        this.confidence = result.confidence();
         this.model = model;
         this.rawJson = rawJson;
     }
@@ -84,6 +90,10 @@ public class AiSuggestion {
 
     public ProposedQueue getProposedQueue() {
         return proposedQueue;
+    }
+
+    public Confidence getConfidence() {
+        return confidence;
     }
 
     public String getModel() {

@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 class SuggestionEngineTest {
 
     private static final String VALID = """
-            {"category":"OTHER","missing_info":[],"reasoning":"r","proposed_queue":"GENERAL_REVIEW"}""";
+            {"category":"OTHER","missing_info":[],"reasoning":"r","proposed_queue":"GENERAL_REVIEW","confidence":"LOW"}""";
 
     private static final SuggestionContext CTX = new SuggestionContext("Something odd happened", "Shop", 100,
             LocalDate.of(2026, 3, 1));

@@ -57,5 +57,6 @@ class SuggestionAsyncTest {
         AiSuggestion s = suggestions.findByDisputeId(d.getId()).get(0);
         assertThat(s.getCategory()).isEqualTo(Category.DUPLICATE_CHARGE);
         assertThat(s.getModel()).isEqualTo("stub");
+        assertThat(s.getConfidence()).isEqualTo(Confidence.MEDIUM);
     }
 }

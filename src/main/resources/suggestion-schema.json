@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "additionalProperties": false,
-  "required": ["category", "missing_info", "reasoning", "proposed_queue"],
+  "required": ["category", "missing_info", "reasoning", "proposed_queue", "confidence"],
   "properties": {
     "category": {
       "enum": ["UNAUTHORIZED_TRANSACTION", "DUPLICATE_CHARGE", "MERCHANDISE_NOT_RECEIVED",
@@ -16,6 +16,7 @@
     "reasoning": {"type": "string", "minLength": 1, "maxLength": 1000},
     "proposed_queue": {
       "enum": ["FRAUD", "BILLING_ERRORS", "MERCHANT_DISPUTES", "GENERAL_REVIEW"]
-    }
+    },
+    "confidence": {"enum": ["LOW", "MEDIUM", "HIGH"]}
   }
 }
