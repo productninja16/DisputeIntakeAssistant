@@ -1,6 +1,7 @@
 package com.disputeintake.eval;
 
 import com.disputeintake.suggestion.Category;
+import com.disputeintake.suggestion.Confidence;
 import java.time.Instant;
 import java.util.EnumMap;
 import java.util.List;
@@ -61,6 +62,21 @@ public final class EvalReport {
         return m;
     }
 
+    /** Cases the model gave at each confidence level, and how many of those had the right category. */
+    public record ConfidenceRow(Confidence confidence, long cases, long categoryCorrect) {
+    }
+
+    public List<ConfidenceRow> byConfidence() {
+        return java.util.Arrays.stream(Confidence.values())
+                .map(level -> {
+                    List<CaseOutcome> atLevel = outcomes.stream()
+                            .filter(o -> o.result() != null && o.result().confidence() == level).toList();
+                    return new ConfidenceRow(level, atLevel.size(),
+                            atLevel.stream().filter(CaseOutcome::categoryCorrect).count());
+                })
+                .toList();
+    }
+
     public List<CaseOutcome> misses() {
         return outcomes.stream().filter(o -> !o.bothCorrect()).toList();
     }
@@ -87,6 +103,18 @@ public final class EvalReport {
         sb.append("| Valid on first try | ").append(pct(validFirstTry())).append(" |\n");
         sb.append("| Valid after one retry | ").append(pct(validAfterRetry())).append(" |\n");
         sb.append("| No suggestion (failed twice) | ").append(pct(noSuggestion())).append(" |\n\n");
+        sb.append("## Accuracy by confidence\n\n");
+        sb.append("Does a higher self-reported confidence mean a more accurate category? ")
+                .append("Informational only; confidence is never used to decide anything.\n\n");
+        sb.append("| Confidence | Cases | Category correct |\n|---|---|---|\n");
+        for (ConfidenceRow r : byConfidence()) {
+            sb.append("| ").append(r.confidence()).append(" | ").append(r.cases()).append(" | ")
+                    .append(r.cases() == 0 ? "n/a"
+                            : String.format("%d/%d (%.0f%%)", r.categoryCorrect(), r.cases(),
+                                    100.0 * r.categoryCorrect() / r.cases()))
+                    .append(" |\n");
+        }
+        sb.append('\n');
         sb.append("## Confusion (rows: expected category, columns: predicted)\n\n");
         sb.append("| Expected | Predicted |\n|---|---|\n");
         confusion().forEach((expected, row) -> {

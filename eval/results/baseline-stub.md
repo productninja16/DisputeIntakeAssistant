@@ -2,7 +2,7 @@
 
 - Client: stub
 - Model: stub
-- Run at: 2026-10-14T00:51:32.794460Z
+- Run at: 2026-10-14T05:18:41.429374Z
 - Cases: 30
 
 ## Accuracy
@@ -22,6 +22,16 @@ A case with no valid suggestion counts as wrong.
 | Valid on first try | 30/30 (100%) |
 | Valid after one retry | 0/30 (0%) |
 | No suggestion (failed twice) | 0/30 (0%) |
+
+## Accuracy by confidence
+
+Does a higher self-reported confidence mean a more accurate category? Informational only; confidence is never used to decide anything.
+
+| Confidence | Cases | Category correct |
+|---|---|---|
+| LOW | 15 | 3/15 (20%) |
+| MEDIUM | 15 | 13/15 (87%) |
+| HIGH | 0 | n/a |
 
 ## Confusion (rows: expected category, columns: predicted)
 
