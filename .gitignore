@@ -6,7 +6,8 @@ target/
 .env
 *.log
 
-# Eval runs: keep only the committed baseline
+# Eval runs: keep only the committed reports (stub baseline and the Haiku run)
 eval/results/*
 !eval/results/.gitkeep
 !eval/results/baseline-stub.md
+!eval/results/haiku-5-5-run1.md
