@@ -11,3 +11,6 @@ eval/results/*
 !eval/results/.gitkeep
 !eval/results/baseline-stub.md
 !eval/results/haiku-5-5-run1.md
+
+# Browser test logs
+.playwright-mcp/

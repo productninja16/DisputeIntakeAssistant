@@ -50,6 +50,19 @@ Then open http://localhost:8080:
 
 Both sign-ins are demo shortcuts, not real authentication.
 
+### The three pages
+
+- **Submit a dispute** (customer): choose a transaction, describe the problem. Card-like numbers are masked.
+- **Dispute queue** (`/analyst/queue`): one table of all disputes with status (In review, Approved,
+  Overridden), the AI's category, its confidence (LOW/MEDIUM/HIGH) and the proposed queue. Filter by
+  status and by proposed queue. In-review cases sort oldest first.
+- **Review** (`/analyst/disputes/{id}`): the customer's text and transaction on the left; the AI
+  suggestion, rationale and missing information on the right. Approve the suggestion, or open
+  Override to pick your own category and queue with a required note.
+
+The confidence is the model's own rough self-assessment. It is shown as a hint only and is never used
+to decide anything.
+
 ### Using the real model
 
 Create a `.env` file in the project root (it is git-ignored; never commit it):
@@ -124,6 +137,10 @@ zsh -ic './scripts/eval.sh --client anthropic --confirm-spend'     # real model:
 
 Reports: [stub baseline](eval/results/baseline-stub.md), [Haiku run](eval/results/haiku-5-5-run1.md).
 
+The reports also include an "accuracy by confidence" table, to check whether a higher self-reported
+confidence really means a more accurate category. The Haiku run above was made **before confidence
+was added**, so it has no such table; re-run the real-model eval to get one.
+
 **Read these numbers with care.** The cases and labels were written by one person, are probably
 easier than real customer messages, and the real-model figure is a single run. The two queue
 misses were a restaurant over-charge (label `BILLING_ERRORS`, model `MERCHANT_DISPUTES`) and a
@@ -153,7 +170,7 @@ src/main/java/com/disputeintake/
   seed/        profile-gated synthetic data seeder
   web/         controllers, sessions, access interceptor
 src/main/resources/
-  db/migration/          Flyway schema (V1, V2)
+  db/migration/          Flyway schema (V1 to V3)
   suggestion-schema.json JSON Schema every model answer must satisfy
 eval/        labelled cases and saved reports
 scripts/     eval runner script
