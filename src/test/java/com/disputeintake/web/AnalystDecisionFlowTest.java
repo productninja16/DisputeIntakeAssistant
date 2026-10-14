@@ -63,8 +63,8 @@ class AnalystDecisionFlowTest {
         if (withSuggestion) {
             UUID s = UUID.randomUUID();
             jdbc.update("""
-                    INSERT INTO ai_suggestions (id, dispute_id, category, missing_info, reasoning, proposed_queue, model, raw_json)
-                    VALUES (?, ?, 'DUPLICATE_CHARGE', '["Receipt"]', 'Looks like a double charge.', 'BILLING_ERRORS', 'test', '{}')""",
+                    INSERT INTO ai_suggestions (id, dispute_id, category, missing_info, reasoning, proposed_queue, confidence, model, raw_json)
+                    VALUES (?, ?, 'DUPLICATE_CHARGE', '["Receipt"]', 'Looks like a double charge.', 'BILLING_ERRORS', 'HIGH', 'test', '{}')""",
                     s, dispute);
             suggestionOut[0] = s;
         }
@@ -81,7 +81,9 @@ class AnalystDecisionFlowTest {
         String html = mvc.perform(get("/analyst/disputes/" + d).session(session)).andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
         assertThat(html).contains("Charged twice at the shop", "Looks like a double charge.", "Receipt",
-                "suggestion only, not a decision", "Approve the AI suggestion");
+                "suggestion only, not a decision", "Approve the AI suggestion", "Rationale", "Missing information",
+                "HIGH", "Override…", "<details class=\"override\"");
+        assertThat(html).doesNotContain("<details class=\"override\" open");
     }
 
     @Test
@@ -117,6 +119,7 @@ class AnalystDecisionFlowTest {
                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
 
         assertThat(html).contains("A note is required when overriding.");
+        assertThat(html).contains("<details class=\"override\" open");
         assertThat(statusOf(d)).isEqualTo("PENDING_REVIEW");
         assertThat(jdbc.queryForObject("SELECT count(*) FROM decisions WHERE dispute_id = ?", Integer.class, d))
                 .isZero();

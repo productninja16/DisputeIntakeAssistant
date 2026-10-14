@@ -5,42 +5,63 @@
 <header th:replace="~{fragments :: header}"></header>
 <main class="wide">
   <nav th:replace="~{fragments :: analystNav}"></nav>
-  <h1>Case <span th:text="${case.caseRef}">D-00000000</span></h1>
+  <h1>
+    Case <span th:text="${case.caseRef}">D-00000000</span>
+    <span class="badge" th:classappend="${case.status.name()} == 'PENDING_REVIEW' ? 'info' : (${case.status.name()} == 'APPROVED' ? 'ok' : 'warn')"
+          th:text="${case.status.name()} == 'PENDING_REVIEW' ? 'In review' : (${case.status.name()} == 'APPROVED' ? 'Approved' : 'Overridden')">In review</span>
+  </h1>
   <p class="error" th:if="${error}" th:text="${error}">Error</p>
 
-  <h2>Customer report</h2>
-  <p>
-    <strong th:text="${case.merchantName}">Merchant</strong> ·
-    <span th:text="${case.amount}">$0.00</span> · charged
-    <span th:text="${case.postedOn}">2026-01-01</span> · card ending
-    <span th:text="${case.cardLast4}">0000</span> · reported
-    <span th:text="${#temporals.format(case.createdAt, 'yyyy-MM-dd HH:mm', 'UTC')}">2026-01-01</span>
-  </p>
-  <blockquote th:text="${case.description}">Customer text</blockquote>
+  <div class="review">
+    <section class="panel">
+      <h2>Customer report</h2>
+      <dl class="facts">
+        <dt>Merchant</dt><dd th:text="${case.merchantName}">Merchant</dd>
+        <dt>Amount</dt><dd th:text="${case.amount}">$0.00</dd>
+        <dt>Charged on</dt><dd th:text="${case.postedOn}">2026-01-01</dd>
+        <dt>Card</dt><dd th:text="'ending ' + ${case.cardLast4}">ending 0000</dd>
+        <dt>Reported</dt><dd th:text="${#temporals.format(case.createdAt, 'yyyy-MM-dd HH:mm', 'UTC')}">2026-01-01</dd>
+      </dl>
+      <h3>What the customer wrote</h3>
+      <blockquote th:text="${case.description}">Customer text</blockquote>
+    </section>
 
-  <h2>AI suggestion <span class="badge muted">suggestion only, not a decision</span></h2>
-  <div th:if="${case.suggestion != null}">
-    <p>
-      Category: <strong th:text="${case.suggestion.category}">CATEGORY</strong> ·
-      Proposed queue: <strong th:text="${case.suggestion.proposedQueue}">QUEUE</strong>
-      <span class="badge muted" th:text="${case.suggestion.model}">model</span>
-    </p>
-    <p th:text="${case.suggestion.reasoning}">Reasoning</p>
-    <div th:if="${!#lists.isEmpty(case.suggestion.missingInfo)}">
-      <p>Missing information:</p>
-      <ul><li th:each="m : ${case.suggestion.missingInfo}" th:text="${m}">Item</li></ul>
-    </div>
+    <section class="panel">
+      <h2>AI suggestion</h2>
+      <p><span class="badge muted">suggestion only, not a decision</span></p>
+      <div th:if="${case.suggestion != null}">
+        <dl class="facts">
+          <dt>Category</dt><dd><strong th:text="${case.suggestion.category}">CATEGORY</strong></dd>
+          <dt>Proposed queue</dt><dd><strong th:text="${case.suggestion.proposedQueue}">QUEUE</strong></dd>
+          <dt>Confidence</dt>
+          <dd>
+            <span th:if="${case.suggestion.confidence != null}" class="badge"
+                  th:classappend="'conf-' + ${case.suggestion.confidence.name().toLowerCase()}"
+                  th:text="${case.suggestion.confidence}">HIGH</span>
+            <span th:if="${case.suggestion.confidence == null}" class="badge muted">not reported</span>
+            <small class="muted-text">as stated by the model, <span th:text="${case.suggestion.model}">model</span></small>
+          </dd>
+        </dl>
+        <h3>Rationale</h3>
+        <p th:text="${case.suggestion.reasoning}">Reasoning</p>
+        <h3>Missing information</h3>
+        <ul th:if="${!#lists.isEmpty(case.suggestion.missingInfo)}">
+          <li th:each="m : ${case.suggestion.missingInfo}" th:text="${m}">Item</li>
+        </ul>
+        <p th:if="${#lists.isEmpty(case.suggestion.missingInfo)}" class="muted-text">Nothing flagged as missing.</p>
+      </div>
+      <p th:if="${case.suggestion == null && case.pending}">
+        No suggestion is available (it may still be generating, so refresh, or it could not be produced).
+        You can still decide by choosing a category and queue below.
+      </p>
+      <p th:if="${case.suggestion == null && !case.pending}">No suggestion was available for this case.</p>
+    </section>
   </div>
-  <p th:if="${case.suggestion == null && case.pending}">
-    No suggestion is available (it may still be generating, so refresh, or it could not be produced).
-    You can still decide by choosing a category and queue below.
-  </p>
-  <p th:if="${case.suggestion == null && !case.pending}">No suggestion was available for this case.</p>
 
-  <div th:if="${case.decision != null}">
+  <section class="panel" th:if="${case.decision != null}">
     <h2>Decision</h2>
     <p>
-      <span class="badge" th:classappend="${case.decision.decisionType.name() == 'OVERRIDDEN'} ? 'warn'"
+      <span class="badge" th:classappend="${case.decision.decisionType.name() == 'OVERRIDDEN'} ? 'warn' : 'ok'"
             th:text="${case.decision.decisionType.name() == 'OVERRIDDEN'} ? 'Overridden' : 'Approved'">Approved</span>
       <strong th:text="${case.decision.finalCategory}">CATEGORY</strong> →
       <strong th:text="${case.decision.finalQueue}">QUEUE</strong>
@@ -48,18 +69,18 @@
       <span th:text="${#temporals.format(case.decision.decidedAt, 'yyyy-MM-dd HH:mm', 'UTC')}">2026-01-01</span>
     </p>
     <p th:if="${case.decision.note}">Note: <span th:text="${case.decision.note}">Note</span></p>
-  </div>
+  </section>
 
-  <div th:if="${case.pending}">
+  <section class="actions" th:if="${case.pending}">
     <h2>Your decision</h2>
-    <form th:if="${case.suggestion != null}" th:action="@{/analyst/disputes/{id}/approve(id=${case.id})}"
-          method="post" class="stack">
+    <form th:if="${case.suggestion != null}" th:action="@{/analyst/disputes/{id}/approve(id=${case.id})}" method="post">
       <input type="hidden" name="suggestionId" th:value="${case.suggestion.id}">
       <button type="submit">Approve the AI suggestion</button>
     </form>
-    <form th:action="@{/analyst/disputes/{id}/override(id=${case.id})}" method="post" class="stack">
-      <fieldset>
-        <legend th:text="${case.suggestion != null} ? 'Or override with your own decision' : 'Choose a category and queue'">Override</legend>
+    <details class="override" th:open="${error != null}">
+      <summary class="button secondary"
+               th:text="${case.suggestion != null} ? 'Override…' : 'Choose a category and queue…'">Override…</summary>
+      <form th:action="@{/analyst/disputes/{id}/override(id=${case.id})}" method="post" class="stack">
         <label for="category">Category</label>
         <select id="category" name="category">
           <option th:each="c : ${categories}" th:value="${c}" th:text="${c}" th:selected="${c == formCategory}">C</option>
@@ -69,11 +90,11 @@
           <option th:each="q : ${queues}" th:value="${q}" th:text="${q}" th:selected="${q == formQueue}">Q</option>
         </select>
         <label for="note">Note (required)</label>
-        <textarea id="note" name="note" rows="3" maxlength="1000" th:text="${formNote}"></textarea>
-      </fieldset>
-      <button type="submit">Record my decision</button>
-    </form>
-  </div>
+        <textarea id="note" name="note" rows="3" maxlength="1000" required th:text="${formNote}"></textarea>
+        <button type="submit">Record my decision</button>
+      </form>
+    </details>
+  </section>
 </main>
 </body>
 </html>

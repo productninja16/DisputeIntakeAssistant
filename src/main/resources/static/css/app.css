@@ -29,3 +29,20 @@ main.wide { max-width: 1000px; }
 .badge.conf-low { background: #fdecea; border-color: #f2b8b5; }
 .filters { display: flex; gap: 1rem; align-items: end; flex-wrap: wrap; margin-bottom: 1rem; }
 .filters label { display: flex; flex-direction: column; gap: .2rem; font-size: .85rem; color: var(--muted); }
+.review { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; align-items: start; margin-bottom: 1rem; }
+@media (max-width: 760px) { .review { grid-template-columns: 1fr; } }
+.panel { background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: 1rem 1.25rem; margin-bottom: 1rem; }
+.review .panel { margin-bottom: 0; }
+.panel h2, .actions h2 { margin-top: 0; font-size: 1.1rem; }
+.panel h3 { font-size: .85rem; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin: 1rem 0 .25rem; }
+dl.facts { display: grid; grid-template-columns: max-content 1fr; gap: .25rem 1rem; margin: 0; }
+dl.facts dt { color: var(--muted); }
+dl.facts dd { margin: 0; }
+blockquote { margin: 0; padding: .6rem .9rem; background: var(--bg); border-left: 3px solid var(--line); white-space: pre-wrap; }
+.muted-text { color: var(--muted); }
+.actions { display: flex; flex-direction: column; gap: .75rem; align-items: flex-start; }
+.actions form.stack { margin-top: .75rem; min-width: min(420px, 100%); }
+details.override { background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: .5rem .75rem; }
+details.override summary { cursor: pointer; list-style: none; }
+details.override summary::-webkit-details-marker { display: none; }
+.button.secondary { background: #fff; color: var(--accent); border: 1px solid var(--accent); }
