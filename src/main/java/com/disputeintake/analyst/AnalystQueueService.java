@@ -4,6 +4,7 @@ import com.disputeintake.customer.CardTransaction;
 import com.disputeintake.customer.CardTransactionRepository;
 import com.disputeintake.dispute.Dispute;
 import com.disputeintake.dispute.DisputeRepository;
+import com.disputeintake.dispute.DisputeStatus;
 import com.disputeintake.suggestion.AiSuggestion;
 import com.disputeintake.suggestion.AiSuggestionRepository;
 import com.disputeintake.suggestion.ProposedQueue;
@@ -61,36 +62,57 @@ public class AnalystQueueService {
         } catch (JsonProcessingException e) {
             missing = List.of();
         }
-        return new SuggestionView(s.getId(), s.getCategory(), s.getProposedQueue(), missing, s.getReasoning(),
-                s.getModel());
+        return new SuggestionView(s.getId(), s.getCategory(), s.getProposedQueue(), s.getConfidence(), missing,
+                s.getReasoning(), s.getModel());
     }
 
+    /** Status filter value meaning "every status". */
+    public static final String ALL_STATUSES = "ALL";
+
     /**
-     * Pending disputes, oldest first.
+     * Disputes for the queue table. In-review disputes sort oldest first (work the longest-waiting
+     * case first); any other view sorts newest first.
      *
-     * @param filter null/blank for all, {@link #NO_SUGGESTION}, or a {@link ProposedQueue} name
+     * @param statusFilter a {@link DisputeStatus} name or {@link #ALL_STATUSES}; null, blank or
+     *                     unrecognised means in review
+     * @param queueFilter  null/blank for all, {@link #NO_SUGGESTION}, or a {@link ProposedQueue} name
      */
     @Transactional(readOnly = true)
-    public List<QueueRow> pending(String filter) {
-        List<PendingRow> pending = queries.findPending();
+    public List<QueueRow> list(String statusFilter, String queueFilter) {
+        String status = normalizeStatus(statusFilter);
+        List<DisputeRow> rows = queries.findAllRows().stream()
+                .filter(r -> ALL_STATUSES.equals(status) || r.status().name().equals(status))
+                .collect(java.util.stream.Collectors.toCollection(java.util.ArrayList::new));
+        if (!DisputeStatus.PENDING_REVIEW.name().equals(status)) {
+            java.util.Collections.reverse(rows); // repository returns oldest first
+        }
         Map<UUID, AiSuggestion> latest = new HashMap<>();
-        if (!pending.isEmpty()) {
-            suggestions.findByDisputeIdIn(pending.stream().map(PendingRow::id).toList()).stream()
+        if (!rows.isEmpty()) {
+            suggestions.findByDisputeIdIn(rows.stream().map(DisputeRow::id).toList()).stream()
                     .sorted(Comparator.comparing(AiSuggestion::getCreatedAt))
                     .forEach(s -> latest.put(s.getDisputeId(), s)); // later ones overwrite earlier
         }
-        return pending.stream()
-                .map(p -> {
-                    AiSuggestion s = latest.get(p.id());
-                    return new QueueRow(p, s == null ? null : s.getCategory(), s == null ? null : s.getProposedQueue());
+        return rows.stream()
+                .map(r -> {
+                    AiSuggestion s = latest.get(r.id());
+                    return new QueueRow(r, s == null ? null : s.getCategory(),
+                            s == null ? null : s.getProposedQueue(), s == null ? null : s.getConfidence());
                 })
-                .filter(r -> matches(r, filter))
+                .filter(r -> matches(r, queueFilter))
                 .toList();
     }
 
-    @Transactional(readOnly = true)
-    public List<HistoryRow> history() {
-        return queries.findHistory();
+    /** The status filter actually applied, so the page can show it selected. */
+    public static String normalizeStatus(String statusFilter) {
+        if (ALL_STATUSES.equals(statusFilter)) {
+            return ALL_STATUSES;
+        }
+        for (DisputeStatus s : DisputeStatus.values()) {
+            if (s.name().equals(statusFilter)) {
+                return s.name();
+            }
+        }
+        return DisputeStatus.PENDING_REVIEW.name();
     }
 
     private static boolean matches(QueueRow row, String filter) {

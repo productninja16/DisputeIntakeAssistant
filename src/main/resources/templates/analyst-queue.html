@@ -4,30 +4,51 @@
 <body>
 <header th:replace="~{fragments :: header}"></header>
 <main class="wide">
-  <nav th:replace="~{fragments :: analystNav}"></nav>
   <p class="notice" th:if="${message}" th:text="${message}">Message</p>
   <p class="error" th:if="${error}" th:text="${error}">Error</p>
-  <h1>Disputes awaiting review</h1>
-  <form th:action="@{/analyst/queue}" method="get" class="stack">
-    <label for="queueFilter">AI-proposed queue</label>
-    <select id="queueFilter" name="queueFilter" onchange="this.form.submit()">
-      <option value="" th:selected="${filter == ''}">All</option>
-      <option th:each="q : ${queues}" th:value="${q}" th:text="${q}" th:selected="${filter == q.name()}">FRAUD</option>
-      <option th:value="${noSuggestion}" th:selected="${filter == noSuggestion}">No suggestion</option>
-    </select>
-    <noscript><button type="submit">Filter</button></noscript>
+  <h1>Dispute queue</h1>
+  <form th:action="@{/analyst/queue}" method="get" class="filters">
+    <label>Status
+      <select name="status">
+        <option th:each="s : ${statuses}" th:value="${s}" th:selected="${statusFilter == s.name()}"
+                th:text="${s.name() == 'PENDING_REVIEW'} ? 'In review' : (${s.name() == 'APPROVED'} ? 'Approved' : 'Overridden')">In review</option>
+        <option th:value="${allStatuses}" th:selected="${statusFilter == allStatuses}">All</option>
+      </select>
+    </label>
+    <label>AI-proposed queue
+      <select name="queueFilter">
+        <option value="" th:selected="${filter == ''}">All</option>
+        <option th:each="q : ${queues}" th:value="${q}" th:text="${q}" th:selected="${filter == q.name()}">FRAUD</option>
+        <option th:value="${noSuggestion}" th:selected="${filter == noSuggestion}">No suggestion</option>
+      </select>
+    </label>
+    <button type="submit">Filter</button>
   </form>
-  <p th:if="${#lists.isEmpty(rows)}">Nothing is waiting for review.</p>
+  <p th:if="${#lists.isEmpty(rows)}">No disputes match these filters.</p>
   <table th:unless="${#lists.isEmpty(rows)}">
-    <thead><tr><th>Case</th><th>Merchant</th><th>Amount</th><th>Reported</th><th>AI suggestion</th></tr></thead>
+    <thead>
+      <tr><th>Case</th><th>Merchant</th><th>Amount</th><th>Reported</th><th>Status</th>
+          <th>AI category</th><th>Confidence</th><th>Proposed queue</th></tr>
+    </thead>
     <tbody>
       <tr th:each="r : ${rows}">
         <td><a th:href="@{/analyst/disputes/{id}(id=${r.dispute.id})}" th:text="${r.dispute.caseRef}">D-00000000</a></td>
         <td th:text="${r.dispute.merchantName}">Merchant</td>
         <td th:text="${r.dispute.amount}">$0.00</td>
         <td th:text="${#temporals.format(r.dispute.createdAt, 'yyyy-MM-dd HH:mm', 'UTC')}">2026-01-01</td>
+        <td><span class="badge" th:classappend="${r.dispute.status.name()} == 'PENDING_REVIEW' ? 'info' : (${r.dispute.status.name()} == 'APPROVED' ? 'ok' : 'warn')"
+                  th:text="${r.dispute.statusLabel}">In review</span></td>
         <td>
-          <span th:if="${r.hasSuggestion}" th:text="${r.suggestedCategory} + ' → ' + ${r.suggestedQueue}">CATEGORY → QUEUE</span>
+          <span th:if="${r.hasSuggestion}" th:text="${r.suggestedCategory}">CATEGORY</span>
+          <span th:unless="${r.hasSuggestion}" class="badge muted">none</span>
+        </td>
+        <td>
+          <span th:if="${r.confidence != null}" class="badge" th:classappend="'conf-' + ${r.confidence.name().toLowerCase()}"
+                th:text="${r.confidence}">HIGH</span>
+          <span th:if="${r.confidence == null}" class="badge muted">none</span>
+        </td>
+        <td>
+          <span th:if="${r.hasSuggestion}" th:text="${r.suggestedQueue}">QUEUE</span>
           <span th:unless="${r.hasSuggestion}" class="badge muted">none</span>
         </td>
       </tr>

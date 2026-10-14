@@ -41,7 +41,6 @@ class AnalystAccessTest {
     @Test
     void analystPagesRedirectToSignInWhenNotSignedIn() throws Exception {
         mvc.perform(get("/analyst/queue")).andExpect(redirectedUrl("/analyst"));
-        mvc.perform(get("/analyst/history")).andExpect(redirectedUrl("/analyst"));
         mvc.perform(get("/analyst/disputes/00000000-0000-0000-0000-000000000000"))
                 .andExpect(redirectedUrl("/analyst"));
     }
@@ -66,7 +65,6 @@ class AnalystAccessTest {
         mvc.perform(post("/analyst/sign-in").param("analyst", "analyst.a").session(session))
                 .andExpect(redirectedUrl("/analyst/queue"));
         mvc.perform(get("/analyst/queue").session(session)).andExpect(status().isOk());
-        mvc.perform(get("/analyst/history").session(session)).andExpect(status().isOk());
     }
 
     @Test
@@ -112,5 +110,96 @@ class AnalystAccessTest {
         String none = mvc.perform(get("/analyst/queue").param("queueFilter", "NONE").session(session))
                 .andReturn().getResponse().getContentAsString();
         org.assertj.core.api.Assertions.assertThat(none).contains("Other Shop").doesNotContain("Queue Shop");
+    }
+
+    private java.util.UUID customerWithTx(String ref, String merchant) {
+        java.util.UUID customer = java.util.UUID.randomUUID();
+        jdbc.update("INSERT INTO customers (id, customer_ref, display_name) VALUES (?, ?, 'Q')", customer, ref);
+        return customer;
+    }
+
+    private java.util.UUID dispute(java.util.UUID customer, String merchant, String status, String createdAt) {
+        java.util.UUID tx = java.util.UUID.randomUUID();
+        java.util.UUID d = java.util.UUID.randomUUID();
+        jdbc.update("""
+                INSERT INTO transactions (id, customer_id, merchant_name, amount_cents, posted_on, card_last4)
+                VALUES (?, ?, ?, 100, current_date, '1111')""", tx, customer, merchant);
+        jdbc.update("""
+                INSERT INTO disputes (id, customer_id, transaction_id, description, status, created_at)
+                VALUES (?, ?, ?, 'Some customer text here', ?, ?::timestamptz)""", d, customer, tx, status, createdAt);
+        return d;
+    }
+
+    @Test
+    void queueShowsStatusAndConfidenceAndFiltersByStatus() throws Exception {
+        java.util.UUID c = customerWithTx("ST-1", "x");
+        java.util.UUID waiting = dispute(c, "Waiting Shop", "PENDING_REVIEW", "2026-01-02T00:00:00Z");
+        java.util.UUID done = dispute(c, "Done Shop", "APPROVED", "2026-01-01T00:00:00Z");
+        java.util.UUID changed = dispute(c, "Changed Shop", "OVERRIDDEN", "2026-01-03T00:00:00Z");
+        jdbc.update("""
+                INSERT INTO ai_suggestions (id, dispute_id, category, reasoning, proposed_queue, confidence, model, raw_json)
+                VALUES (gen_random_uuid(), ?, 'OTHER', 'r', 'GENERAL_REVIEW', 'HIGH', 'test', '{}')""", waiting);
+        // an old suggestion written before confidence existed
+        jdbc.update("""
+                INSERT INTO ai_suggestions (id, dispute_id, category, reasoning, proposed_queue, model, raw_json)
+                VALUES (gen_random_uuid(), ?, 'OTHER', 'r', 'GENERAL_REVIEW', 'test', '{}')""", done);
+
+        MockHttpSession session = new MockHttpSession();
+        mvc.perform(post("/analyst/sign-in").param("analyst", "analyst.a").session(session));
+
+        String dflt = page(session, null);
+        org.assertj.core.api.Assertions.assertThat(dflt).contains("Waiting Shop", "In review", "HIGH")
+                .doesNotContain("Done Shop", "Changed Shop");
+
+        String approved = page(session, "APPROVED");
+        org.assertj.core.api.Assertions.assertThat(approved).contains("Done Shop", "Approved")
+                .doesNotContain("Waiting Shop", "Changed Shop");
+
+        String overridden = page(session, "OVERRIDDEN");
+        org.assertj.core.api.Assertions.assertThat(overridden).contains("Changed Shop", "Overridden");
+
+        String all = page(session, "ALL");
+        org.assertj.core.api.Assertions.assertThat(all).contains("Waiting Shop", "Done Shop", "Changed Shop");
+
+        String bogus = page(session, "NOT_A_STATUS");
+        org.assertj.core.api.Assertions.assertThat(bogus).contains("Waiting Shop").doesNotContain("Done Shop");
+    }
+
+    @Test
+    void inReviewSortsOldestFirstAndOtherViewsNewestFirst() throws Exception {
+        java.util.UUID c = customerWithTx("SORT-1", "x");
+        dispute(c, "Sort Old", "PENDING_REVIEW", "2026-02-01T00:00:00Z");
+        dispute(c, "Sort New", "PENDING_REVIEW", "2026-02-03T00:00:00Z");
+        dispute(c, "Sort Mid", "PENDING_REVIEW", "2026-02-02T00:00:00Z");
+
+        MockHttpSession session = new MockHttpSession();
+        mvc.perform(post("/analyst/sign-in").param("analyst", "analyst.a").session(session));
+
+        String pending = page(session, "PENDING_REVIEW");
+        org.assertj.core.api.Assertions.assertThat(pending.indexOf("Sort Old"))
+                .isLessThan(pending.indexOf("Sort Mid"));
+        org.assertj.core.api.Assertions.assertThat(pending.indexOf("Sort Mid"))
+                .isLessThan(pending.indexOf("Sort New"));
+
+        String all = page(session, "ALL");
+        org.assertj.core.api.Assertions.assertThat(all.indexOf("Sort New"))
+                .isLessThan(all.indexOf("Sort Mid"));
+        org.assertj.core.api.Assertions.assertThat(all.indexOf("Sort Mid"))
+                .isLessThan(all.indexOf("Sort Old"));
+    }
+
+    private String page(MockHttpSession session, String status) throws Exception {
+        var req = get("/analyst/queue").session(session);
+        if (status != null) {
+            req = req.param("status", status);
+        }
+        return mvc.perform(req).andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+    }
+
+    @Test
+    void historyPageIsGone() throws Exception {
+        MockHttpSession session = new MockHttpSession();
+        mvc.perform(post("/analyst/sign-in").param("analyst", "analyst.a").session(session));
+        mvc.perform(get("/analyst/history").session(session)).andExpect(status().is4xxClientError());
     }
 }

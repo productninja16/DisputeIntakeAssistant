@@ -9,6 +9,7 @@ import com.disputeintake.analyst.DisputeNotFoundException;
 import com.disputeintake.analyst.InvalidDecisionException;
 import com.disputeintake.analyst.NoSuggestionException;
 import com.disputeintake.dispute.Dispute;
+import com.disputeintake.dispute.DisputeStatus;
 import com.disputeintake.suggestion.Category;
 import com.disputeintake.suggestion.ProposedQueue;
 import jakarta.servlet.http.HttpSession;
@@ -58,18 +59,17 @@ class AnalystController {
     }
 
     @GetMapping("/analyst/queue")
-    String queuePage(@RequestParam(required = false) String queueFilter, Model model) {
-        model.addAttribute("rows", queue.pending(queueFilter));
+    String queuePage(@RequestParam(required = false) String status,
+            @RequestParam(required = false) String queueFilter, Model model) {
+        String appliedStatus = AnalystQueueService.normalizeStatus(status);
+        model.addAttribute("rows", queue.list(appliedStatus, queueFilter));
+        model.addAttribute("statusFilter", appliedStatus);
         model.addAttribute("filter", queueFilter == null ? "" : queueFilter);
+        model.addAttribute("statuses", DisputeStatus.values());
+        model.addAttribute("allStatuses", AnalystQueueService.ALL_STATUSES);
         model.addAttribute("queues", ProposedQueue.values());
         model.addAttribute("noSuggestion", AnalystQueueService.NO_SUGGESTION);
         return "analyst-queue";
-    }
-
-    @GetMapping("/analyst/history")
-    String history(Model model) {
-        model.addAttribute("rows", queue.history());
-        return "analyst-history";
     }
 
     @GetMapping("/analyst/disputes/{id}")

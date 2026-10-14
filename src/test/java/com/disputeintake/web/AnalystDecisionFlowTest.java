@@ -123,7 +123,7 @@ class AnalystDecisionFlowTest {
     }
 
     @Test
-    void overrideRecordsAndShowsOverriddenBadgeInHistory() throws Exception {
+    void overrideRecordsAndTheQueueShowsItAsOverridden() throws Exception {
         UUID d = newDispute(false, new UUID[1]);
 
         mvc.perform(post("/analyst/disputes/" + d + "/override").param("category", "UNAUTHORIZED_TRANSACTION")
@@ -131,9 +131,12 @@ class AnalystDecisionFlowTest {
                 .andExpect(redirectedUrl("/analyst/queue"));
 
         assertThat(statusOf(d)).isEqualTo("OVERRIDDEN");
-        String history = mvc.perform(get("/analyst/history").session(session)).andReturn().getResponse()
+        String queue = mvc.perform(get("/analyst/queue").param("status", "OVERRIDDEN").session(session))
+                .andReturn().getResponse().getContentAsString();
+        assertThat(queue).contains("Flow Shop", "Overridden");
+        String casePage = mvc.perform(get("/analyst/disputes/" + d).session(session)).andReturn().getResponse()
                 .getContentAsString();
-        assertThat(history).contains("Flow Shop", "Overridden", "analyst.b");
+        assertThat(casePage).contains("analyst.b", "Customer does not recognise it.");
     }
 
     @Test

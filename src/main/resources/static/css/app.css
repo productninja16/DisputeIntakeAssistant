@@ -22,3 +22,10 @@ th, td { text-align: left; padding: .5rem .6rem; border-bottom: 1px solid var(--
 .badge.warn { background: #fff8e1; border-color: #f0d98a; }
 .badge.muted { color: var(--muted); }
 main.wide { max-width: 1000px; }
+.badge.info { background: #e8f0fe; border-color: #b6ccf5; }
+.badge.ok { background: #e6f4ea; border-color: #b4dcc0; }
+.badge.conf-high { background: #e6f4ea; border-color: #b4dcc0; }
+.badge.conf-medium { background: #fff8e1; border-color: #f0d98a; }
+.badge.conf-low { background: #fdecea; border-color: #f2b8b5; }
+.filters { display: flex; gap: 1rem; align-items: end; flex-wrap: wrap; margin-bottom: 1rem; }
+.filters label { display: flex; flex-direction: column; gap: .2rem; font-size: .85rem; color: var(--muted); }
